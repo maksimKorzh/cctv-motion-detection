@@ -1,10 +1,12 @@
 import cv2
+import time
 from ultralytics import YOLO
+from playsound import playsound
 
 # ------------------------------
 # 1. Load YOLOv8 Model
 # ------------------------------
-model = YOLO("yolov8m.pt")
+model = YOLO("yolov8s.pt")
 model.conf = 0.1  # Confidence threshold (0-1)
 
 # Classes we care about: 0=person, 15=cat, 16=dog
@@ -42,7 +44,7 @@ while True:
         cls = int(box.cls[0])
         if cls not in classes_to_detect:
             continue  # skip classes we don't care about
-
+        
         x1, y1, x2, y2 = map(int, box.xyxy[0])
         conf = float(box.conf[0])
 
@@ -54,6 +56,17 @@ while True:
         elif cls == 16:
             label = 'Dog'
 
+        # Alarm
+        playsound('sonar.mp3')
+        
+        # Take snapshot
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        filename = f'./snapshots/snapshot_{label}_{timestamp}.jpg'
+
+        # Save the original full-resolution frame, not the resized one
+        cv2.imwrite(filename, frame)
+        print(f"[INFO] Snapshot saved: {filename}")
+        
         # Draw bounding box and label
         cv2.rectangle(frame_resized, (x1, y1), (x2, y2), (0, 255, 0), 2)
         cv2.putText(frame_resized, f'{label} {conf:.2f}', (x1, y1-10),
